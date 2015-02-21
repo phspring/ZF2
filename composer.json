@@ -1,0 +1,12 @@
+{
+  "name" : "PhSpring-ZF2",
+  "require" : {
+    "zendframework/zendframework" : "=2.3.5",
+    "phspring/common" : "dev-master"
+  },
+  "repositories" : [ {
+    "type" : "composer",
+    "url" : "https://packagist.org/"
+  } ],
+  "minimum-stability" : "dev"
+}
