@@ -12,8 +12,9 @@ namespace PhSpring\ZF2\Mvc\Service;
 use Zend\ServiceManager\FactoryInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 use PhSpring\ZF2\Mvc\Controller\ControllerManager;
+use Zend\Mvc\Service\ControllerLoaderFactory as ZControllerLoaderFactory;
 
-class ControllerLoaderFactory implements FactoryInterface
+class ControllerLoaderFactory extends ZControllerLoaderFactory
 {
     /**
      * Create the controller loader service
@@ -45,5 +46,4 @@ class ControllerLoaderFactory implements FactoryInterface
 
         return $controllerLoader;
     }
-    
 }
