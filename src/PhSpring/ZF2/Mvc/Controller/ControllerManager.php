@@ -1,14 +1,14 @@
 <?php
 namespace PhSpring\ZF2\Mvc\Controller;
 
-use Zend\Mvc\Controller\ControllerManager as ZCM;
-use PhSpring\Reflection\ReflectionClass;
-use PhSpring\ZF2\Engine\GeneratedController;
-use Zend\Mvc\Controller\AbstractActionController;
 use PhSpring\Annotations\Controller;
-use Zend\Code\Reflection\ClassReflection;
-use Zend\Code\Generator\DocBlockGenerator;
-use Zend\ServiceManager\ServiceManager;
+use PhSpring\Reflection\ReflectionClass;
+use PhSpring\ZF2\Engine\GeneratedControllerInterface;
+use stdClass;
+use Zend\Mvc\Controller\AbstractActionController;
+use Zend\Mvc\Controller\ControllerManager as ZCM;
+use Zend\ServiceManager\Exception\ServiceNotCreatedException;
+use Zend\ServiceManager\Exception\ServiceNotFoundException;
 
 class ControllerManager extends ZCM
 {
@@ -21,19 +21,19 @@ class ControllerManager extends ZCM
      *
      * @param string $canonicalName            
      * @param string $requestedName            
-     * @return null|\stdClass
-     * @throws Exception\ServiceNotCreatedException If resolved class does not exist
+     * @return null|stdClass
+     * @throws ServiceNotCreatedException If resolved class does not exist
      */
     protected function createFromInvokable($canonicalName, $requestedName)
     {
         $invokable = $this->invokableClasses[$canonicalName];
         
         if (! class_exists($invokable)) {
-            throw new Exception\ServiceNotFoundException(sprintf('%s: failed retrieving "%s%s" via invokable class "%s"; class does not exist', get_class($this) . '::' . __FUNCTION__, $canonicalName, ($requestedName ? '(alias: ' . $requestedName . ')' : ''), $invokable));
+            throw new ServiceNotFoundException(sprintf('%s: failed retrieving "%s%s" via invokable class "%s"; class does not exist', get_class($this) . '::' . __FUNCTION__, $canonicalName, ($requestedName ? '(alias: ' . $requestedName . ')' : ''), $invokable));
         }
         
         $ref = new ReflectionClass($invokable);
-        if(!(in_array(GeneratedController::class, $ref->getInterfaceNames()) || $invokable instanceof AbstractActionController)){
+        if(!(in_array(GeneratedControllerInterface::class, $ref->getInterfaceNames()) || $invokable instanceof AbstractActionController)){
             if($ref->hasAnnotation(Controller::class)){
                 echo '<pre>'.$this->getServiceLocator()->get('ControllerGenerator')->getContent($invokable);
                 die();
