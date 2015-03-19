@@ -35,15 +35,7 @@ class ControllerManager extends ZCM
         $ref = new ReflectionClass($invokable);
         if(!(in_array(GeneratedController::class, $ref->getInterfaceNames()) || $invokable instanceof AbstractActionController)){
             if($ref->hasAnnotation(Controller::class)){
-                $generated = \Zend\Code\Generator\ClassGenerator::fromReflection(new ClassReflection($invokable));
-                $interfaces = $generated->getImplementedInterfaces();
-                $interfaces[]=GeneratedController::class;
-                $generated->setImplementedInterfaces($interfaces);
-                $generated->setDocBlock(new DocBlockGenerator());
-                //$config =$this->getServiceLocator()->get('servicemanager')->get('Config'); 
-                //$this->serviceLocator->get('ServiceManager')->get('ServiceManager')->get('ServiceManager')->get('Config');
-                //var_dump($config);
-                echo '<pre>'.$generated->generate();
+                echo '<pre>'.$this->getServiceLocator()->get('ControllerGenerator')->getContent($invokable);
                 die();
             }
             
