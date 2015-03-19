@@ -22,7 +22,7 @@ class ControllerGenerator {
     {
         $generated = ClassGenerator::fromReflection(new ClassReflection($invokable));
         $interfaces = $generated->getImplementedInterfaces();
-        $interfaces[]=GeneratedController::class;
+        $interfaces[]=GeneratedControllerInterface::class;
         $generated->setImplementedInterfaces($interfaces);
         $generated->setDocBlock(new DocBlockGenerator());
         //$config =$this->getServiceLocator()->get('servicemanager')->get('Config'); 
