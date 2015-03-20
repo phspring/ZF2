@@ -5,58 +5,76 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 namespace PhSpring\ZF2\Engine;
 
 use Zend\Code\Generator\ClassGenerator;
 use Zend\Code\Generator\MethodGenerator;
 use Zend\Code\Reflection\ClassReflection;
+use PhSpring\Reflection\ReflectionClass;
+use PhSpring\Annotations\Controller;
+use PhSpring\ZF2\Annotations\CliController;
+use Zend\Mvc\Controller\AbstractActionController;
+use Zend\Mvc\Controller\AbstractConsoleController;
 
 /**
  * Description of ControllerGenerator
  *
  * @author tothd
  */
-class ControllerGenerator {
-    
+class ControllerGenerator
+{
+
     /**
      *
      * @var ClassGenerator
      */
     private $generator;
-    
+
+    /**
+     *
+     * @var ReflectionClass
+     */
+    private $phsRef;
+
     public function getContent($invokable)
     {
+        $this->phsRef = new ReflectionClass($invokable);
         $this->generator = ClassGenerator::fromReflection(new ClassReflection($invokable));
         
         $this->buildInterfaces();
         $this->buildMethods();
-        //$config =$this->getServiceLocator()->get('servicemanager')->get('Config'); 
-        //$this->serviceLocator->get('ServiceManager')->get('ServiceManager')->get('ServiceManager')->get('Config');
-        //var_dump($config);
-        $this->generator->setName('phs'.$this->generator->getName());
-        $extClass = explode('\\',$invokable);
-        $this->generator->setExtendedClass(end($extClass));
+        
+        $this->generator->setName('phs' . $this->generator->getName());
+        $extClass = explode('\\', $invokable);
+        $oringinClass = end($extClass);
+        
+        $annotation = $this->phsRef->getAnnotation(Controller::class);
+        if ($annotation instanceof CliController) {
+            $this->generator->setExtendedClass(AbstractConsoleController::class);
+        } else {
+            $this->generator->setExtendedClass(AbstractActionController::class);
+        }
         
         return $this->generator->generate();
     }
-    
+
     private function buildInterfaces()
     {
         $interfaces = $this->generator->getImplementedInterfaces();
-        $interfaces[]=GeneratedControllerInterface::class;
+        $interfaces[] = GeneratedControllerInterface::class;
         $this->generator->setImplementedInterfaces($interfaces);
     }
     
     private function buildMethods()
     {
-        foreach ($this->generator->getMethods() as $method)
-        {
-            $body = 'parent::' . $method->getName() . '(';
+        foreach ($this->generator->getMethods() as $method) {
+            
             $params = array_map(function ($param) {
                 return '$' . $param->getName();
             }, $method->getParameters());
-            $body .= implode(', ', $params) . ');';
+            
+            $body = sprintf('parent::%s(%s)', $method->getName(), implode(', ', $params));
+
             $newMethod = new MethodGenerator();
             $newMethod->setName($method->getName());
             $newMethod->setBody($body);
