@@ -12,15 +12,13 @@ use Doctrine\Common\Annotations\Annotation\Target;
 use PhSpring\Engine\AnnotationAbstract;
 use PhSpring\Annotations\Controller;
 /**
- * Description of Controller
+ * Description of CliController
  *
  * @author lobiferi
  * @Annotation
  * @Target(value="CLASS")
- * @CliController
  */
-class CliController
-{
+class CliController extends Controller{
     function __construct() {
         
     }
