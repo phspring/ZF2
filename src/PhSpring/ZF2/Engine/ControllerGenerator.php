@@ -7,12 +7,14 @@
  */
 namespace PhSpring\ZF2\Engine;
 
+use PhSpring\Annotations\Controller;
+use PhSpring\Reflection\ReflectionClass;
+use PhSpring\ZF2\Annotations\CliController;
 use Zend\Code\Generator\ClassGenerator;
 use Zend\Code\Generator\MethodGenerator;
 use Zend\Code\Reflection\ClassReflection;
-use PhSpring\Reflection\ReflectionClass;
-use PhSpring\Annotations\Controller;
-use PhSpring\ZF2\Annotations\CliController;
+use Zend\EventManager\EventManager;
+use Zend\EventManager\EventManagerInterface;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\Mvc\Controller\AbstractConsoleController;
 use Zend\Code\Generator\ParameterGenerator;
@@ -48,6 +50,25 @@ class ControllerGenerator extends ClassGenerator implements EventManagerAwareInt
      * @var ReflectionClass
      */
     private $phsRef;
+    
+    protected $eventManager;
+    
+    public function setEventManager(EventManagerInterface $eventManager)
+    {
+        $this->eventManager = $eventManager;
+    }
+
+    /**
+     * @return EventManagerInterface
+     */
+    public function getEventManager()
+    {
+        if (null === $this->eventManager) {
+            $this->setEventManager(new EventManager());
+        }
+
+        return $this->eventManager;
+    }
 
     public function getContent($invokable)
     {
