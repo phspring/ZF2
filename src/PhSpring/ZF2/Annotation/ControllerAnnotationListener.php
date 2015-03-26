@@ -47,7 +47,7 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
         $interfaces[] = GeneratedControllerInterface::class;
         $target->setImplementedInterfaces($interfaces);
         $this->buildConstructor($target, $reflection);
-        $target->setName('phs' . $target->getName());
+        $target->setName(ClassGenerator::DEFAULT_PREFIX. $target->getName());
         $extClass = explode('\\', $reflection->getName());
         $oringinClass = end($extClass);
         
@@ -78,7 +78,7 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
         $params = [];
         if ($method) {
             foreach ($method->getParameters() as $param) {
-                $paramName = 'phsParam' . $param->getName();
+                $paramName = ClassGenerator::PARAMETER_PREFIX . $param->getName();
                 $body .= sprintf('$%s = NULL;' . PHP_EOL, $paramName);
                 $params[] = '$'.$paramName;
             }
@@ -99,7 +99,7 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
                 return '$' . $param->getName();
             }, $method->getParameters());
         
-                $body = sprintf(' return $this->%s->%s(%s);', self::PROPERTY_NAME_INSTANCE, $method->getName(), implode(', ', $params));
+                $body = sprintf(' return $this->%s->%s(%s);', ClassGenerator::PROPERTY_NAME_INSTANCE, $method->getName(), implode(', ', $params));
         
                 $newMethod = new MethodGenerator();
                 $newMethod->setName($method->getName());

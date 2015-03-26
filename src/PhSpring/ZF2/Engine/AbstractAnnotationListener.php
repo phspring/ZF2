@@ -16,7 +16,7 @@ abstract class AbstractAnnotationListener implements ListenerAggregateInterface
     const EVENT_ANNOTATION_METHOD_BEFORE = 'PhSpring.Annotation.onBeforeMethod';
 
     const EVENT_ANNOTATION_METHOD_AFTER = 'PhSpring.Annotation.onAfterMethod';
-
+    
     /**
      *
      * @var \Zend\Stdlib\CallbackHandler[]

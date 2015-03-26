@@ -7,7 +7,6 @@ class Module
 {
     public function onBootstrap(MvcEvent $e)
     {
-        $eventManager        = $e->getApplication()->getEventManager();
 		$app = $e->getApplication();
 		$sm = $app->getServiceManager();
 		$generator = $app->getServiceManager()->get('ControllerGenerator');

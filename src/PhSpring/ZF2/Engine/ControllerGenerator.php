@@ -45,6 +45,9 @@ class ControllerGenerator extends ClassGenerator implements EventManagerAwareInt
      */
     private $phsRef;
 
+    /**
+     * @param string $invokable
+     */
     public function getContent($invokable)
     {
         $this->phsRef = new ReflectionClass($invokable);
