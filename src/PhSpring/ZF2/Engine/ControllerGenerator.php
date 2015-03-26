@@ -18,6 +18,7 @@ use Zend\Code\Generator\ParameterGenerator;
 use Zend\EventManager\ListenerAggregateInterface;
 use Zend\EventManager\EventManagerAwareInterface;
 use Zend\EventManager\EventManagerInterface;
+use Zend\Code\Generator\DocBlockGenerator;
 
 /**
  * Description of ControllerGenerator
@@ -52,54 +53,12 @@ class ControllerGenerator extends ClassGenerator implements EventManagerAwareInt
     {
         $this->phsRef = new ReflectionClass($invokable);
         $this->generator = ClassGenerator::fromReflection(new ClassReflection($invokable));
+        $this->generator->setDocBlock(new DocBlockGenerator());
         $this->eventManager->trigger(AbstractAnnotationListener::EVENT_ANNOTATION_CLASS_BEFORE, $this->generator, [self::PARAMETER_REFLECTION=>$this->phsRef]);
         
         //$this->buildMethods();
         
         return $this->generator->generate();
-    }
-
-    private function buildMethods()
-    {
-        foreach ($this->generator->getMethods() as $method) {
-            if ($method->getName() == '__construct') {
-                $this->buildConstructor();
-                continue;
-            }
-            $params = array_map(function ($param) {
-                return '$' . $param->getName();
-            }, $method->getParameters());
-            
-            $body = sprintf(' return $this->%s->%s(%s);', self::PROPERTY_NAME_INSTANCE, $method->getName(), implode(', ', $params));
-            
-            $newMethod = new MethodGenerator();
-            $newMethod->setName($method->getName());
-            $newMethod->setBody($body);
-            
-            $this->generator->removeMethod($method->getName());
-            $this->generator->addMethodFromGenerator($newMethod);
-        }
-    }
-
-    private function buildConstructor()
-    {
-        $newMethod = new MethodGenerator();
-        $newMethod->setName('__construct');
-        $method = $this->generator->getMethod('__construct');
-        $body = '';
-        $params = [];
-        if ($method) {
-            foreach ($method->getParameters() as $param) {
-                $paramName = 'phsParam' . $param->getName();
-                $params[] = $paramName;
-                $body .= sprintf('$%s = NULL;' . PHP_EOL, $paramName);
-            }
-            ;
-            $this->generator->removeMethod($method->getName());
-        }
-        $body .= sprintf(' $this->%s = new \%s(%s);' . PHP_EOL, self::PROPERTY_NAME_INSTANCE, $this->phsRef->getName(), implode(', ', $params));
-        $newMethod->setBody($body);
-        $this->generator->addMethodFromGenerator($newMethod);
     }
 
     /**
