@@ -57,6 +57,7 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
         } else {
             $target->setExtendedClass(AbstractActionController::class);
         }
+        //$this->cloneMethods($target, $reflection);
     }
 
     /*
@@ -78,8 +79,8 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
         if ($method) {
             foreach ($method->getParameters() as $param) {
                 $paramName = 'phsParam' . $param->getName();
-                $params[] = $paramName;
                 $body .= sprintf('$%s = NULL;' . PHP_EOL, $paramName);
+                $params[] = '$'.$paramName;
             }
             ;
             $generator->removeMethod($method->getName());
@@ -87,6 +88,31 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
         $body .= sprintf(' $this->%s = new \%s(%s);' . PHP_EOL, ClassGenerator::PROPERTY_NAME_INSTANCE, $reflection->getName(), implode(', ', $params));
         $newMethod->setBody($body);
         $generator->addMethodFromGenerator($newMethod);
+    }
+    
+    private function cloneMethods(ClassGenerator $generator, ReflectionClass $reflection){
+        foreach ($this->generator->getMethods() as $method) {
+            if ($method->getName() == '__construct') {
+                continue;
+            }
+            $params = array_map(function ($param) {
+                return '$' . $param->getName();
+            }, $method->getParameters());
+        
+                $body = sprintf(' return $this->%s->%s(%s);', self::PROPERTY_NAME_INSTANCE, $method->getName(), implode(', ', $params));
+        
+                $newMethod = new MethodGenerator();
+                $newMethod->setName($method->getName());
+                $newMethod->setBody($body);
+        
+                $this->generator->removeMethod($method->getName());
+                $this->generator->addMethodFromGenerator($newMethod);
+        }
+        
+    }
+    
+    private function cloneMethod(){
+        
     }
     
 }
