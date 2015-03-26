@@ -7,7 +7,6 @@
  */
 namespace PhSpring\ZF2\Engine;
 
-use Zend\Code\Generator\ClassGenerator;
 use Zend\Code\Generator\MethodGenerator;
 use Zend\Code\Reflection\ClassReflection;
 use PhSpring\Reflection\ReflectionClass;
@@ -28,9 +27,6 @@ use Zend\EventManager\EventManagerInterface;
  */
 class ControllerGenerator extends ClassGenerator implements EventManagerAwareInterface
 {
-
-    
-    const PROPERTY_NAME_INSTANCE = 'pshInstance';
     
     /**
      * @var EventManagerInterface
@@ -53,30 +49,11 @@ class ControllerGenerator extends ClassGenerator implements EventManagerAwareInt
     {
         $this->phsRef = new ReflectionClass($invokable);
         $this->generator = ClassGenerator::fromReflection(new ClassReflection($invokable));
+        $this->eventManager->trigger(AbstractAnnotationListener::EVENT_ANNOTATION_CLASS_BEFORE, $this->generator, [self::PARAMETER_REFLECTION=>$this->phsRef]);
         
-        $this->eventManager->trigger(AbstractAnnotationListener::EVENT_ANNOTATION_CLASS_BEFORE, $this->generator, ["phsRef"=>$this->phsRef]);
+        //$this->buildMethods();
         
-        $this->buildInterfaces();
-        $this->buildMethods();
-        
-        $this->generator->setName('phs' . $this->generator->getName());
-        $extClass = explode('\\', $invokable);
-        $oringinClass = end($extClass);
-        
-        $annotation = $this->phsRef->getAnnotation(Controller::class);
-        if ($annotation instanceof CliController) {
-            $this->generator->setExtendedClass(AbstractConsoleController::class);
-        } else {
-            $this->generator->setExtendedClass(AbstractActionController::class);
-        }
         return $this->generator->generate();
-    }
-
-    private function buildInterfaces()
-    {
-        $interfaces = $this->generator->getImplementedInterfaces();
-        $interfaces[] = GeneratedControllerInterface::class;
-        $this->generator->setImplementedInterfaces($interfaces);
     }
 
     private function buildMethods()

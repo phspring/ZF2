@@ -4,6 +4,7 @@ namespace PhSpring\ZF2\Engine;
 use Zend\EventManager\ListenerAggregateInterface;
 use Zend\EventManager\EventManagerInterface;
 use Zend\Mvc\MvcEvent;
+use Zend\EventManager\Event;
 
 abstract class AbstractAnnotationListener implements ListenerAggregateInterface
 {
@@ -61,5 +62,14 @@ abstract class AbstractAnnotationListener implements ListenerAggregateInterface
     {}
 
     public function onAfterMethod()
-    {}
+    {}    
+    
+    /**
+     * 
+     * @param Event $event
+     * @return \Reflection 
+     */
+    protected function getReflection( Event $event){
+        return $event->getParam(ClassGenerator::PARAMETER_REFLECTION);
+    }
 }
