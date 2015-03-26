@@ -10,6 +10,7 @@ use PhSpring\Reflection\ReflectionClass;
 use PhSpring\ZF2\Annotations\CliController;
 use Zend\Mvc\Controller\AbstractConsoleController;
 use Zend\Mvc\Controller\AbstractActionController;
+use PhSpring\ZF2\Engine\GeneratedControllerInterface;
 
 class ControllerAnnotationListener extends AbstractAnnotationListener
 {
@@ -44,7 +45,7 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
             return;
         }
         $interfaces = $target->getImplementedInterfaces();
-        $interfaces[] = GeneratedControllerInterface::class;
+        $interfaces[] = '\\'.GeneratedControllerInterface::class;
         $target->setImplementedInterfaces($interfaces);
         $this->buildConstructor($target, $reflection);
         $this->cloneMethods($target, $reflection);
@@ -54,9 +55,9 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
         
         $annotation = $reflection->getAnnotation(Controller::class);
         if ($annotation instanceof CliController) {
-            $target->setExtendedClass(AbstractConsoleController::class);
+            $target->setExtendedClass('\\'.AbstractConsoleController::class);
         } else {
-            $target->setExtendedClass(AbstractActionController::class);
+            $target->setExtendedClass('\\'.AbstractActionController::class);
         }
         // $this->cloneMethods($target, $reflection);
     }
