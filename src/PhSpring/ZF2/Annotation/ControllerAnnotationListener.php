@@ -39,15 +39,16 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
     public function onBeforeClass(Event $event)
     {
         $reflection = $this->getReflection($event);
-        $target=$event->getTarget();
-        if(!$reflection->hasAnnotation(Controller::class)){
+        $target = $event->getTarget();
+        if (! $reflection->hasAnnotation(Controller::class)) {
             return;
         }
         $interfaces = $target->getImplementedInterfaces();
         $interfaces[] = GeneratedControllerInterface::class;
         $target->setImplementedInterfaces($interfaces);
         $this->buildConstructor($target, $reflection);
-        $target->setName(ClassGenerator::DEFAULT_PREFIX. $target->getName());
+        $this->cloneMethods($target, $reflection);
+        $target->setName(ClassGenerator::DEFAULT_PREFIX . $target->getName());
         $extClass = explode('\\', $reflection->getName());
         $oringinClass = end($extClass);
         
@@ -57,7 +58,7 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
         } else {
             $target->setExtendedClass(AbstractActionController::class);
         }
-        //$this->cloneMethods($target, $reflection);
+        // $this->cloneMethods($target, $reflection);
     }
 
     /*
@@ -68,7 +69,7 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
     {
         echo 'elkaptam:' . __METHOD__ . PHP_EOL;
     }
-    
+
     private function buildConstructor(ClassGenerator $generator, ReflectionClass $reflection)
     {
         $newMethod = new MethodGenerator();
@@ -80,7 +81,7 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
             foreach ($method->getParameters() as $param) {
                 $paramName = ClassGenerator::PARAMETER_PREFIX . $param->getName();
                 $body .= sprintf('$%s = NULL;' . PHP_EOL, $paramName);
-                $params[] = '$'.$paramName;
+                $params[] = '$' . $paramName;
             }
             ;
             $generator->removeMethod($method->getName());
@@ -89,30 +90,36 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
         $newMethod->setBody($body);
         $generator->addMethodFromGenerator($newMethod);
     }
-    
-    private function cloneMethods(ClassGenerator $generator, ReflectionClass $reflection){
-        foreach ($this->generator->getMethods() as $method) {
+
+    private function cloneMethods(ClassGenerator $generator, ReflectionClass $reflection)
+    {
+        foreach ($generator->getMethods() as $method) {
             if ($method->getName() == '__construct') {
                 continue;
             }
-            $params = array_map(function ($param) {
-                return '$' . $param->getName();
-            }, $method->getParameters());
-        
-                $body = sprintf(' return $this->%s->%s(%s);', ClassGenerator::PROPERTY_NAME_INSTANCE, $method->getName(), implode(', ', $params));
-        
-                $newMethod = new MethodGenerator();
-                $newMethod->setName($method->getName());
-                $newMethod->setBody($body);
-        
-                $this->generator->removeMethod($method->getName());
-                $this->generator->addMethodFromGenerator($newMethod);
+            $newMethod = $this->cloneMethod($method);
+            $generator->removeMethod($method->getName());
+            $generator->addMethodFromGenerator($newMethod);
         }
-        
     }
-    
-    private function cloneMethod(){
+
+    /**
+     * 
+     * @param ClassGenerator $generator
+     * @param ReflectionClass $reflection
+     * @return string|\Zend\Code\Generator\MethodGenerator
+     */
+    private function cloneMethod(MethodGenerator $method)
+    {
+        $params = array_map(function ($param) {
+            return '$' . $param->getName();
+        }, $method->getParameters());
         
+        $body = sprintf(' return $this->%s->%s(%s);', ClassGenerator::PROPERTY_NAME_INSTANCE, $method->getName(), implode(', ', $params));
+        
+        $newMethod = new MethodGenerator();
+        $newMethod->setName($method->getName());
+        $newMethod->setBody($body);
+        return $newMethod;
     }
-    
 }
