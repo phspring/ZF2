@@ -40,7 +40,7 @@ class ControllerManager extends ZCM
 		/* @var $cache \Zend\Cache\Storage\Adapter\Filesystem */
 		$cache = $this->getServiceLocator()->get('phsCache');
 
-		if (! $cache->hasItem($canonicalName)) {
+		if (true || ! $cache->hasItem($canonicalName)) {
 			$cache->addItem($canonicalName, $invokable);
 			if (! (in_array(GeneratedControllerInterface::class, $ref->getInterfaceNames()) ||
 				 $invokable instanceof AbstractActionController)) {
