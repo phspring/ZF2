@@ -1,11 +1,30 @@
 <?php
 return [
-    'service_manager' => [
-        'factories' => [
-            'AnnotationEventManager'=> 'PhSpring\ZF2\Engine\AnnotationEventManagerFactory'
-        ]
-    ],
-    'annotation_events' => [
-        'PhSpring\ZF2\Annotation\ControllerAnnotationListener'
-    ]
-];
+	'service_manager' => [
+		'factories' => [
+			'AnnotationEventManager' => 'PhSpring\ZF2\Engine\AnnotationEventManagerFactory',
+			'phsCache' => function () {
+				return \Zend\Cache\StorageFactory::factory(
+					array(
+						'adapter' => array(
+							'name' => 'filesystem',
+							'options' => array(
+								'dirLevel' => 2,
+								'cacheDir' => 'data/cache/phs',
+								'dirPermission' => 0755,
+								'filePermission' => 0666,
+								'namespaceSeparator' => '-db-'
+							)
+						),
+						'plugins' => array(
+							'serializer'
+						)
+					));
+			}
+		]
+	],
+	'annotation_events' => [
+		'PhSpring\ZF2\Annotation\ControllerAnnotationListener'
+	]
+]
+;
