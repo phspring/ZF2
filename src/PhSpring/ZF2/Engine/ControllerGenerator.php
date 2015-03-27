@@ -28,37 +28,22 @@ use Zend\Code\Generator\DocBlockGenerator;
  */
 class ControllerGenerator extends ClassGenerator implements EventManagerAwareInterface
 {
-    
-    /**
-     * @var EventManagerInterface
-     */
-    private $eventManager;
 
-    /**
-     *
-     * @var ClassGenerator
-     */
-    private $generator;
-
-    /**
-     *
-     * @var ReflectionClass
-     */
-    private $phsRef;
 
     /**
      * @param string $invokable
      */
     public function getContent($invokable)
     {
-        $this->phsRef = new ReflectionClass($invokable);
-        $this->generator = ClassGenerator::fromReflection(new ClassReflection($invokable));
-        $this->generator->setDocBlock(new DocBlockGenerator());
-        $this->eventManager->trigger(AbstractAnnotationListener::EVENT_ANNOTATION_CLASS_BEFORE, $this->generator, [self::PARAMETER_REFLECTION=>$this->phsRef]);
-        
-        //$this->buildMethods();
-        
+        $this->build($invokable);
         return $this->generator->generate();
+    }
+
+    protected function build($invokable){
+    	$this->phsRef = new ReflectionClass($invokable);
+    	$this->generator = ClassGenerator::fromReflection(new ClassReflection($invokable));
+    	$this->generator->setDocBlock(new DocBlockGenerator());
+    	$this->eventManager->trigger(AbstractAnnotationListener::EVENT_ANNOTATION_CLASS_BEFORE, $this->generator, [self::PARAMETER_REFLECTION=>$this->phsRef]);
     }
 
     /**
@@ -75,5 +60,15 @@ class ControllerGenerator extends ClassGenerator implements EventManagerAwareInt
     public function getEventManager()
     {
         return $this->eventManager;
+    }
+
+    /**
+     *
+     * @param unknown $invokable
+     * @return \PhSpring\ZF2\Engine\ClassGenerator
+     */
+    public function __invoke($invokable){
+    	$this->build($invokable);
+    	return $this->generator;
     }
 }
