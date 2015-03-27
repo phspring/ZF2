@@ -37,7 +37,6 @@ class ControllerManager extends ZCM
         if(!(in_array(GeneratedControllerInterface::class, $ref->getInterfaceNames()) || $invokable instanceof AbstractActionController)){
             if($ref->hasAnnotation(Controller::class)){
             	$generator = $this->getServiceLocator()->get('ControllerGenerator');
-            	/* @var $class \PhSpring\ZF2\Engine\ClassGenerator */
             	$class = $generator($invokable);
                 $invokable = $class->getInvokableClassName();
             	eval($class->generate());
