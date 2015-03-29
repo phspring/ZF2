@@ -69,7 +69,7 @@ class ControllerManager extends ZCM
                 'injectTemplate'
             ), - 81);
             eval($content);
-            var_dump($content);die();
+            //var_dump($content);die();
         }
         /* */
         if (null === $this->creationOptions || (is_array($this->creationOptions) && empty($this->creationOptions))) {
