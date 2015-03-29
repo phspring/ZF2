@@ -59,7 +59,6 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
         } else {
             $target->setExtendedClass('\\'.AbstractActionController::class);
         }
-        // $this->cloneMethods($target, $reflection);
     }
 
     /*
