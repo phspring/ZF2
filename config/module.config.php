@@ -24,7 +24,8 @@ return [
 		]
 	],
 	'annotation_events' => [
-		'PhSpring\ZF2\Annotation\ControllerAnnotationListener'
+		'PhSpring\ZF2\Annotation\ControllerAnnotationListener',
+		'PhSpring\ZF2\Annotation\AutowiredAnnotationListener',
 	]
 ]
 ;
