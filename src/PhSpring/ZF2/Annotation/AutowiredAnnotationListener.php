@@ -25,24 +25,6 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
 
 	/*
 	 * (non-PHPdoc)
-	 * @see \PhSpring\ZF2\Engine\AbstractAnnotationListener::onAfterClass()
-	 */
-	public function onAfterClass()
-	{
-		echo 'elkaptam:' . __METHOD__ . PHP_EOL;
-	}
-
-	/*
-	 * (non-PHPdoc)
-	 * @see \PhSpring\ZF2\Engine\AbstractAnnotationListener::onAfterMethod()
-	 */
-	public function onAfterMethod()
-	{
-		echo 'elkaptam:' . __METHOD__ . PHP_EOL;
-	}
-
-	/*
-	 * (non-PHPdoc)
 	 * @see \PhSpring\ZF2\Engine\AbstractAnnotationListener::onBeforeClass()
 	 */
 	public function onBeforeClass(Event $event)
@@ -60,23 +42,15 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
 
 	}
 
-	/*
-	 * (non-PHPdoc)
-	 * @see \PhSpring\ZF2\Engine\AbstractAnnotationListener::onBeforeMethod()
-	 */
-	public function onBeforeMethod()
-	{
-		echo 'elkaptam:' . __METHOD__ . PHP_EOL;
-	}
-
 	public function handleProperty(ReflectionProperty $property){
 		if($property->hasAnnotation(Autowired::class)){
+		    if(isset($property->getAnnotation(Autowired::class)->value)) return;
 			$type = Helper::getPropertyType($property);
 			$isPrimitiveType = (in_array($type, Constants::$php_default_types) || in_array($type, Constants::$php_pseudo_types));
 			$serviceName = ($qualifier = $property->getAnnotation(Qualifier::class)) ? $qualifier->value : null;
 
 			if (($type === null || $isPrimitiveType) && $serviceName === null) {
-				throw new RuntimeException("Must set the property type by @var annotation or you must use @Qualifier annotation to define the service");
+				throw new \RuntimeException("Must set the {$property->getDeclaringClass()->getName()}::\${$property->getName()} property type by @var annotation or you must use @Qualifier annotation to define the service");
 			}
 			if (empty($serviceName)) {
 				$serviceName = $type;
