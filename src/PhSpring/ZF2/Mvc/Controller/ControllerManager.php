@@ -22,8 +22,8 @@ class ControllerManager extends ZCM
      * Overrides parent implementation by passing $creationOptions to the
      * constructor, if non-null.
      *
-     * @param string $canonicalName            
-     * @param string $requestedName            
+     * @param string $canonicalName
+     * @param string $requestedName
      * @return null|stdClass
      * @throws ServiceNotCreatedException If resolved class does not exist
      */
@@ -31,11 +31,11 @@ class ControllerManager extends ZCM
     {
         $invokable = $this->invokableClasses[$canonicalName];
         $originInvokable = $invokable;
-        
+
         if (! class_exists($invokable)) {
             throw new ServiceNotFoundException(sprintf('%s: failed retrieving "%s%s" via invokable class "%s"; class does not exist', get_class($this) . '::' . __FUNCTION__, $canonicalName, ($requestedName ? '(alias: ' . $requestedName . ')' : ''), $invokable));
         }
-        
+
         $ref = new ReflectionClass($invokable);
         /* @var $cache \Zend\Cache\Storage\Adapter\Filesystem */
         $cache = $this->getServiceLocator()->get('phsCache');
@@ -53,7 +53,7 @@ class ControllerManager extends ZCM
                 }
             }
         }
-        
+
         $data = $cache->getItem($canonicalName);
         if (is_array($data)) {
             $invokable = $data['name'];
@@ -69,15 +69,17 @@ class ControllerManager extends ZCM
                 'injectTemplate'
             ), - 81);
             eval($content);
-            //var_dump($content);die();
         }
         /* */
+        $this->creationOptions = (array)$this->creationOptions;
+        array_unshift($this->creationOptions, $this->getServiceLocator()->get('ServiceManager'));
+        //echo ($content);die();
         if (null === $this->creationOptions || (is_array($this->creationOptions) && empty($this->creationOptions))) {
             $instance = new $invokable();
         } else {
             $instance = new $invokable($this->creationOptions);
         }
-        
+
         return $instance;
     }
 }

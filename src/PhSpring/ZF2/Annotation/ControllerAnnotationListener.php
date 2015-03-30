@@ -11,6 +11,7 @@ use PhSpring\ZF2\Annotations\CliController;
 use Zend\Mvc\Controller\AbstractConsoleController;
 use Zend\Mvc\Controller\AbstractActionController;
 use PhSpring\ZF2\Engine\GeneratedControllerInterface;
+use Zend\Code\Generator\ParameterGenerator;
 
 class ControllerAnnotationListener extends AbstractAnnotationListener
 {
@@ -52,7 +53,7 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
         $target->setName(ClassGenerator::DEFAULT_PREFIX . $target->getName());
         $extClass = explode('\\', $reflection->getName());
         $oringinClass = end($extClass);
-        
+
         $annotation = $reflection->getAnnotation(Controller::class);
         if ($annotation instanceof CliController) {
             $target->setExtendedClass('\\'.AbstractConsoleController::class);
@@ -86,7 +87,10 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
             ;
             $generator->removeMethod($method->getName());
         }
-        $body .= sprintf(' $this->%s = new \%s(%s);' . PHP_EOL, ClassGenerator::PROPERTY_NAME_INSTANCE, $reflection->getName(), implode(', ', $params));
+        $body .= sprintf('
+        	$serviceLocator = $params[0];
+        	$this->%s = new \%s(%s);' . PHP_EOL, ClassGenerator::PROPERTY_NAME_INSTANCE, $reflection->getName(), implode(', ', $params));
+        $newMethod->setParameter((new ParameterGenerator())->setName('params'));
         $newMethod->setBody($body);
         $generator->addMethodFromGenerator($newMethod);
     }
@@ -104,7 +108,7 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
     }
 
     /**
-     * 
+     *
      * @param ClassGenerator $generator
      * @param ReflectionClass $reflection
      * @return string|\Zend\Code\Generator\MethodGenerator
@@ -114,9 +118,9 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
         $params = array_map(function ($param) {
             return '$' . $param->getName();
         }, $method->getParameters());
-        
+
         $body = sprintf(' return $this->%s->%s(%s);', ClassGenerator::PROPERTY_NAME_INSTANCE, $method->getName(), implode(', ', $params));
-        
+
         $newMethod = new MethodGenerator();
         $newMethod->setName($method->getName());
         $newMethod->setBody($body);
