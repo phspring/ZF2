@@ -32,7 +32,7 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
     public function onBeforeClass(Event $event)
     {
         $this->refName = sprintf('$ref%s', spl_object_hash($this));
-        $this->code = sprintf('%s = new \%s($this->%s);', $this->refName, ReflectionClass::class, ClassGenerator::PROPERTY_NAME_INSTANCE);
+        $this->code = '';
         $reflection = $this->getReflection($event);
         /* @var $target \PhSpring\ZF2\Engine\ClassGenerator */
         $target = $event->getTarget();
@@ -44,8 +44,7 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
         foreach ($reflection->getProperties() as $property) {
             $this->handleProperty($property);
         }
-        $target->getMethod('__construct')->setBody($target->getMethod('__construct')
-            ->getBody() . PHP_EOL . $this->code);
+        $target->getMethod('__construct')->setBody($target->getMethod('__construct')->getBody() . PHP_EOL . $this->code);
     }
 
     public function handleProperty(ReflectionProperty $property)

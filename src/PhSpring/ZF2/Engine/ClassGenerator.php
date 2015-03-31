@@ -22,7 +22,7 @@ class ClassGenerator extends ZfClassGenerator
      */
     protected $phsRef;
 
-	const PROPERTY_NAME_INSTANCE = 'phsInstance';
+    const PROPERTY_NAME_INSTANCE = 'phsInstance';
 
     const PARAMETER_REFLECTION = 'phsReflection';
 

@@ -90,8 +90,7 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
         $body .= sprintf('
         $this->serviceLocator = $params[0];
         $this->%1$s = new \%2$s(%3$s);
-        $this->phsRef = new \PhSpring\Reflection\ReflectionClass($this->%1$s);
-            ' . PHP_EOL, ClassGenerator::PROPERTY_NAME_INSTANCE, $reflection->getName(), implode(', ', $params));
+        $this->phsRef = new \PhSpring\Reflection\ReflectionClass($this->%1$s);' . PHP_EOL, ClassGenerator::PROPERTY_NAME_INSTANCE, $reflection->getName(), implode(', ', $params));
         $newMethod->setParameter((new ParameterGenerator())->setName('params'));
         $newMethod->setBody($body);
         $generator->addMethodFromGenerator($newMethod);
