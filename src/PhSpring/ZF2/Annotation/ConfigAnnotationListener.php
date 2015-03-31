@@ -28,6 +28,7 @@ class ConfigAnnotationListener extends AbstractAnnotationListener
 
     public function onBeforeClass(Event $event)
     {
+        return;
         $this->refName = sprintf('$ref%s', spl_object_hash($this));
         $this->code = sprintf('%s = new \%s($this->%s);', $this->refName, \ReflectionClass::class, ClassGenerator::PROPERTY_NAME_INSTANCE);
         $reflection = $this->getReflection($event);
