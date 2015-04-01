@@ -68,6 +68,11 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
 
     private function phsAutowired($serviceName, $expectedType, $propertyName)
     {
+        // Allow specifying a class name directly; registers as an invokable class
+        if (! $this->serviceLocator->has($serviceName) && class_exists($serviceName)) {
+            $this->serviceLocator->setInvokableClass($serviceName, $serviceName);
+        }
+        
         $service = $this->serviceLocator->get($serviceName);
         if (! $service instanceof $expectedType) {
             throw new \Exception("The type is missmatch ($propertyName - $serviceName - $expectedType)");
