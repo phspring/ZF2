@@ -31,8 +31,7 @@ class ConfigAnnotationListener extends AbstractAnnotationListener
 
     public function onBeforeClass(Event $event)
     {
-        $this->refName = sprintf('$ref%s', spl_object_hash($this));
-        $this->code = ''; //sprintf('%s = new \%s($this->%s);', $this->refName, \ReflectionClass::class, ClassGenerator::PROPERTY_NAME_INSTANCE);
+        $this->code = '';
         $reflection = $this->getReflection($event);
         /* @var $target ClassGenerator */
         $target = $event->getTarget();
@@ -50,58 +49,31 @@ class ConfigAnnotationListener extends AbstractAnnotationListener
     {
         if ($property->hasAnnotation(Config::class)) {
             $annotation = $property->getAnnotation(Config::class);
-            if (isset($property->getAnnotation(Config::class)->value))
-                return;
             $type = Helper::getPropertyType($property);
             $isPrimitiveType = (in_array($type, Constants::$php_default_types) || in_array($type, Constants::$php_pseudo_types));
             $serviceName = "Config";
-            $this->code .= sprintf('$this->phsConfig("%s", \%s::class, "%s");' . PHP_EOL, $property->getName(), $serviceName, $type, $this->refName, ClassGenerator::PROPERTY_NAME_INSTANCE, $isPrimitiveType, $annotation->value);
-            
-            /*
-            $this->code .= sprintf('
-                $phsConfig%1$s = $serviceLocator->get("%2$s");
-                $path = explode(".", "%7$s");
-                while (!empty($path)) {
-                    $phsConfig%1$s = $phsConfig%1$s[array_shift($path)];
-                }
-				%4$sref=%4$s->getProperty("%1$s");
-				%4$sref->setAccessible(true);
-                
-                if ("%3$s" !== null && !!"%6$s") {
-                    if (gettype($phsConfig%1$s) === "%3$s") {
-                        %4$sref->setValue($this->%5$s, $phsConfig%1$s);
-                    }elseif("%3$s"==="array" && method_exists($phsConfig%1$s, "toArray")){
-                        %4$sref->setValue($this->%5$s, $phsConfig%1$s->toArray());
-                    }
-                }else{
-                    %4$sref->setValue($this->%5$s, $phsConfig%1$s);
-                }
-            ' . PHP_EOL, $property->getName(), $serviceName, $type, $this->refName, ClassGenerator::PROPERTY_NAME_INSTANCE, $isPrimitiveType, $annotation->value);
-             */
+            $this->code .= sprintf('$this->phsConfig("%s", \%s::class, "%s", %d, "%s");' . PHP_EOL, $property->getName(), $serviceName, $type, $isPrimitiveType, $annotation->value);
         }
     }
     
-    private function phsConfig($service, $serviceName, $type, $refName, $nameInstance, $isPrimitiveType, $annotationValue)
+    private function phsConfig($propertyName, $serviceName, $type, $isPrimitiveType, $annotationValue)
     {
-        $phsService = '$phsConfig' . $service;
-        $refNameRef = $refName . 'ref';
-        
         $phsService = $this->serviceLocator->get($serviceName);
         $path = explode(".", $annotationValue);
         while (!empty($path)) {
              $phsService =  $phsService[array_shift($path)];
         }
-        $refNameRef = $refName->getProperty($service);
-        $refNameRef->setAccessible(true);
+        $property = $this->phsRef->getProperty($propertyName);
+        $property->setAccessible(true);
 
         if ($type !== null && !!$isPrimitiveType) {
             if (gettype($phsService) === $type) {
-                $refNameRef->setValue($this->$nameInstance, $phsService);
-            } elseif ($type === "array" && method_exists($phsService, "toArray")){
-                $refNameRef->setValue($this->$nameInstance, $phsService->toArray());
+                $property->setValue($this->phsInstance, $phsService);
+            } elseif ($type === "array" && is_object($phsService) && method_exists($phsService, "toArray")){
+                $property->setValue($this->phsInstance, $phsService->toArray());
             }
         } else {
-            $refNameRef->setValue($this->$nameInstance, $phsService);
+            $property->setValue($this->phsInstance, $phsService);
         }
     }
 }

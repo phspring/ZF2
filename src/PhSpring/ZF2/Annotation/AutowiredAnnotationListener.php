@@ -31,7 +31,6 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
      */
     public function onBeforeClass(Event $event)
     {
-        $this->refName = sprintf('$ref%s', spl_object_hash($this));
         $this->code = '';
         $reflection = $this->getReflection($event);
         /* @var $target \PhSpring\ZF2\Engine\ClassGenerator */
@@ -50,8 +49,9 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
     public function handleProperty(ReflectionProperty $property)
     {
         if ($property->hasAnnotation(Autowired::class)) {
-            if (isset($property->getAnnotation(Autowired::class)->value))
+            if (isset($property->getAnnotation(Autowired::class)->value)){
                 return;
+            }
             $type = Helper::getPropertyType($property);
             $isPrimitiveType = (in_array($type, Constants::$php_default_types) || in_array($type, Constants::$php_pseudo_types));
             $serviceName = ($qualifier = $property->getAnnotation(Qualifier::class)) ? $qualifier->value : null;
