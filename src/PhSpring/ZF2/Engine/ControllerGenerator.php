@@ -44,6 +44,7 @@ class ControllerGenerator extends ClassGenerator implements EventManagerAwareInt
     	$this->generator = ClassGenerator::fromReflection(new ClassReflection($invokable));
     	$this->generator->setDocBlock(new DocBlockGenerator());
     	$this->eventManager->trigger(AbstractAnnotationListener::EVENT_ANNOTATION_CLASS_BEFORE, $this->generator, [self::PARAMETER_REFLECTION=>$this->phsRef]);
+    	$this->eventManager->trigger(AbstractAnnotationListener::EVENT_ANNOTATION_METHOD_BEFORE, $this->generator, [self::PARAMETER_REFLECTION=>$this->phsRef]);
     }
 
     /**

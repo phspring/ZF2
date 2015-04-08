@@ -27,6 +27,8 @@ return [
 		'PhSpring\ZF2\Annotation\ControllerAnnotationListener',
 		'PhSpring\ZF2\Annotation\AutowiredAnnotationListener',
 		'PhSpring\ZF2\Annotation\ConfigAnnotationListener',
+	    'PhSpring\ZF2\Annotation\RequestParamAnnotationListener',
+	     
 	]
 ]
 ;
