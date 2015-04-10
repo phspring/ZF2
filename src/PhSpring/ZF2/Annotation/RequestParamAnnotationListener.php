@@ -7,6 +7,7 @@ use PhSpring\Reflection\ReflectionMethod;
 use Zend\Code\Reflection\MethodReflection;
 use Zend\EventManager\Event;
 use Zend\Code\Generator\MethodGenerator;
+use Zend\Mvc\Controller\Plugin\Params;
 
 class RequestParamAnnotationListener extends AbstractAnnotationListener
 {
@@ -66,19 +67,24 @@ class RequestParamAnnotationListener extends AbstractAnnotationListener
 
     private function phsGetRequestParam($name, $required, $default)
     {
-        $param = $this->params($name);
+        /* @var $params Params */
+        $params = $param = $this->params();
+        $param = $params->fromRoute($name);
         if (! $param) {
-            $param = $this->getRequest()->getQuery($name);
-            if (! $param) {
-                $param = $this->getRequest()->getPost($name);
-            }
+            $param = $this->params()->fromQuery($name);
         }
         if (! $param) {
-            if($required){
+            $param = $this->params()->fromPost($name);
+        }
+        if (! $param) {
+            $param = $this->getRequest()->fromHeader($name);
+        }
+        if (! $param) {
+            if ($required) {
                 throw new \InvalidArgumentException("Not defined parameter");
-            }elseif($default !== \PhSpring\Annotations\RequestParam::DEFAULT_VALUE){
+            } elseif ($default !== \PhSpring\Annotations\RequestParam::DEFAULT_VALUE) {
                 $param = $default;
-            }else{
+            } else {
                 $param = null;
             }
         }
