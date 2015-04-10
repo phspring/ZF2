@@ -81,10 +81,9 @@ class AnnotationRouteStack extends TreeRouteStack implements ServiceLocatorAware
                     foreach ($routes as $key => $route) {
                         $this->addRoute('phs-route-' . $key, $route);
                     }
-                    
-                    return parent::match($request, $pathOffset, $options);
                 }
             }
+            return parent::match($request, $pathOffset, $options);
         }
         return $return;
     }
