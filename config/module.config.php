@@ -23,6 +23,9 @@ return [
 			}
 		]
 	],
+	'router' => [
+	    'router_class'=>'PhSpring\ZF2\Mvc\Router\Http\AnnotationRouteStack'
+	],
 	'annotation_events' => [
 		'PhSpring\ZF2\Annotation\ControllerAnnotationListener',
 		'PhSpring\ZF2\Annotation\AutowiredAnnotationListener',
