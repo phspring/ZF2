@@ -77,7 +77,7 @@ class RequestParamAnnotationListener extends AbstractAnnotationListener
             $param = $this->params()->fromPost($name);
         }
         if (! $param) {
-            $param = $this->getRequest()->fromHeader($name);
+            $param = $this->params()->fromHeader($name);
         }
         if (! $param) {
             if ($required) {
