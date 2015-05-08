@@ -42,7 +42,8 @@ class ConfigAnnotationListener extends AbstractAnnotationListener
         foreach ($reflection->getProperties() as $property) {
             $this->handleProperty($property);
         }
-        $target->getMethod('__construct')->setBody($target->getMethod('__construct')->getBody() . PHP_EOL . $this->code);
+        $target->getMethod('__construct')->setBody($target->getMethod('__construct')
+            ->getBody() . PHP_EOL . $this->code);
     }
 
     public function handleProperty(ReflectionProperty $property)
@@ -55,21 +56,26 @@ class ConfigAnnotationListener extends AbstractAnnotationListener
             $this->code .= sprintf('$this->phsConfig("%s", \%s::class, "%s", %d, "%s");' . PHP_EOL, $property->getName(), $serviceName, $type, $isPrimitiveType, $annotation->value);
         }
     }
-    
+
     private function phsConfig($propertyName, $serviceName, $type, $isPrimitiveType, $annotationValue)
     {
         $phsService = $this->serviceLocator->get($serviceName);
         $path = explode(".", $annotationValue);
-        while (!empty($path)) {
-             $phsService =  $phsService[array_shift($path)];
+        while (! empty($path)) {
+            $key = array_shift($path);
+            if (array_key_exists($key, $phsService)) {
+                $phsService = $phsService[$key];
+            } else {
+                throw new \InvalidArgumentException("Configuration key ('$annotationValue') is not available");
+            }
         }
         $property = $this->phsRef->getProperty($propertyName);
         $property->setAccessible(true);
-
-        if ($type !== null && !!$isPrimitiveType) {
+        
+        if ($type !== null && ! ! $isPrimitiveType) {
             if (gettype($phsService) === $type) {
                 $property->setValue($this->phsInstance, $phsService);
-            } elseif ($type === "array" && is_object($phsService) && method_exists($phsService, "toArray")){
+            } elseif ($type === "array" && is_object($phsService) && method_exists($phsService, "toArray")) {
                 $property->setValue($this->phsInstance, $phsService->toArray());
             }
         } else {

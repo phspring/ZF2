@@ -5,6 +5,8 @@ use Zend\EventManager\ListenerAggregateInterface;
 use Zend\EventManager\EventManagerInterface;
 use Zend\Mvc\MvcEvent;
 use Zend\EventManager\Event;
+use Zend\Code\Generator\MethodGenerator;
+use Zend\Code\Reflection\MethodReflection;
 
 abstract class AbstractAnnotationListener implements ListenerAggregateInterface
 {
@@ -63,6 +65,11 @@ abstract class AbstractAnnotationListener implements ListenerAggregateInterface
 
     public function onAfterMethod()
     {}    
+    
+    protected function copyTemplateMethod(ClassGenerator $target, $method){
+        $target->addMethodFromGenerator(MethodGenerator::fromReflection(new MethodReflection(get_class($this) . '::'.$method)));
+        
+    }
     
     /**
      * 

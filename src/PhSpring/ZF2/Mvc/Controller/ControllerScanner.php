@@ -1,6 +1,8 @@
 <?php
 namespace PhSpring\ZF2\Mvc\Controller;
 
+use Zend\ServiceManager\AbstractFactoryInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
 use PhSpring\Annotations\Controller;
 use PhSpring\Reflection\ReflectionClass;
 use PhSpring\ZF2\Engine\GeneratedControllerInterface;
@@ -13,37 +15,26 @@ use PhSpring\ZF2\Engine\ClassGenerator;
 use PhSpring\ZF2\Mvc\View\Http\InjectTemplateListener;
 use Zend\Mvc\MvcEvent;
 
-class ControllerManager extends ZCM
+class ControllerScanner implements AbstractFactoryInterface
 {
-
-    /**
-     * Attempt to create an instance via an invokable class
-     *
-     * Overrides parent implementation by passing $creationOptions to the
-     * constructor, if non-null.
-     *
-     * @param string $canonicalName
-     * @param string $requestedName
-     * @return null|stdClass
-     * @throws ServiceNotCreatedException If resolved class does not exist
-     */
-    protected function createFromInvokable($canonicalName, $requestedName)
+protected $creationOptions = null;
+    public function canCreateServiceWithName(ServiceLocatorInterface $serviceLocator, $name, $requestedName)
     {
-        $invokable = $this->invokableClasses[$canonicalName];
-        $originInvokable = $invokable;
+        return class_exists($requestedName);
+        
+    }
 
-        if (! class_exists($invokable)) {
-            throw new ServiceNotFoundException(sprintf('%s: failed retrieving "%s%s" via invokable class "%s"; class does not exist', get_class($this) . '::' . __FUNCTION__, $canonicalName, ($requestedName ? '(alias: ' . $requestedName . ')' : ''), $invokable));
-        }
-
-        $ref = new ReflectionClass($invokable);
+    public function createServiceWithName(ServiceLocatorInterface $serviceLocator, $name, $requestedName)
+    {
+        $canonicalName = $name;
+        $ref = new ReflectionClass($requestedName);
         /* @var $cache \Zend\Cache\Storage\Adapter\Filesystem */
-        $cache = $this->getServiceLocator()->get('phsCache');
+        $cache = $serviceLocator->getServiceLocator()->get('phsCache');
         
         
         if (1 == 1 || ! $cache->hasItem($canonicalName)) {
-            $cache->addItem($canonicalName, $invokable);
-            if (! $invokable instanceof AbstractActionController) {
+            $cache->addItem($canonicalName, $requestedName);
+            if (! $requestedName instanceof AbstractActionController) {
                 if ($ref->hasAnnotation(Controller::class)) {
                     $parts = str_split(md5($ref->getFileName()), 2);
                     array_unshift($parts, $cache->getOptions()->getCacheDir());
@@ -51,28 +42,28 @@ class ControllerManager extends ZCM
                     if(!file_exists($path)){
                         mkdir($path, 0755, true);
                     }
-                    $generator = $this->getServiceLocator()->get('ControllerGenerator');
-                    $class = $generator($invokable);
+                    $generator = $serviceLocator->getServiceLocator()->get('ControllerGenerator');
+                    $class = $generator($requestedName);
                     $classPath = $path.DIRECTORY_SEPARATOR.pathinfo($ref->getFileName(), PATHINFO_BASENAME);
                     file_put_contents($classPath, '<?php'.PHP_EOL.$class->generate());
-                    
+        
                     $cache->setItem($canonicalName, [
                         'name' => $class->getInvokableClassName(),
                         'class_path'=>$classPath,
-                        'template' => preg_replace('/\\\\/', '/', preg_replace('/(\\\\)?Controller/', '', $invokable))
+                        'template' => preg_replace('/\\\\/', '/', preg_replace('/(\\\\)?Controller/', '', $requestedName))
                     ]);
                 }
             }
         }
-
+        
         $data = $cache->getItem($canonicalName);
         if (is_array($data)) {
-            $invokable = $data['name'];
-            $eventManager = $this->getServiceLocator()->get('EventManager');
+            $requestedName = $data['name'];
+            $eventManager = $serviceLocator->getServiceLocator()->get('EventManager');
             $sharedEvents = $eventManager->getSharedManager();
             $injectTemplateListener = new InjectTemplateListener();
             $injectTemplateListener->setControllerMap([
-                $invokable => $data['template']
+                $requestedName => $data['template']
             ]);
             $sharedEvents->attach('Zend\Stdlib\DispatchableInterface', MvcEvent::EVENT_DISPATCH, array(
                 $injectTemplateListener,
@@ -82,19 +73,15 @@ class ControllerManager extends ZCM
         }
         /* */
         $this->creationOptions = (array)$this->creationOptions;
-        array_unshift($this->creationOptions, $this->getServiceLocator()->get('ServiceManager'));
+        array_unshift($this->creationOptions, $serviceLocator->getServiceLocator()->get('ServiceManager'));
         //echo ($content);die();
         if (null === $this->creationOptions || (is_array($this->creationOptions) && empty($this->creationOptions))) {
-            $instance = new $invokable();
+            $instance = new $requestedName();
         } else {
-            $instance = new $invokable($this->creationOptions);
+            $instance = new $requestedName($this->creationOptions);
         }
-
-        return $instance;
-    }
-    private function getConfig(){
-        $this->get('Config');
         
-    } 
-    
+        return $instance;
+        
+    }
 }

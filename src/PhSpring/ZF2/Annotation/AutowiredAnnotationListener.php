@@ -25,6 +25,10 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
 
     private $refName;
 
+    const TEMPLATE_METHOD = 'phsAutowired';
+
+    const CONTRUCTOR_METHOD = '__construct';
+
     /*
      * (non-PHPdoc)
      * @see \PhSpring\ZF2\Engine\AbstractAnnotationListener::onBeforeClass()
@@ -35,21 +39,22 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
         $reflection = $this->getReflection($event);
         /* @var $target \PhSpring\ZF2\Engine\ClassGenerator */
         $target = $event->getTarget();
-        if (! $target->hasMethod('phsAutowired')) {
-            $target->addMethodFromGenerator(MethodGenerator::fromReflection(new MethodReflection(self::class . '::phsAutowired')));
+        if (! $target->hasMethod(self::TEMPLATE_METHOD)) {
+            $this->copyTemplateMethod($target, self::TEMPLATE_METHOD);
         }
         
         /* @var $property ReflectionProperty */
         foreach ($reflection->getProperties() as $property) {
             $this->handleProperty($property);
         }
-        $target->getMethod('__construct')->setBody($target->getMethod('__construct')->getBody() . PHP_EOL . $this->code);
+        $target->getMethod(self::CONTRUCTOR_METHOD)->setBody($target->getMethod(self::CONTRUCTOR_METHOD)
+            ->getBody() . PHP_EOL . $this->code);
     }
 
     public function handleProperty(ReflectionProperty $property)
     {
         if ($property->hasAnnotation(Autowired::class)) {
-            if (isset($property->getAnnotation(Autowired::class)->value)){
+            if (isset($property->getAnnotation(Autowired::class)->value)) {
                 return;
             }
             $type = Helper::getPropertyType($property);
@@ -80,5 +85,40 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
         $property = $this->phsRef->getProperty($propertyName);
         $property->setAccessible(true);
         $property->setValue($this->phsInstance, $service);
+    }
+
+    public function onBeforeMethod(Event $event)
+    {
+        $this->code = '';
+        $reflection = $this->getReflection($event);
+        foreach ($reflection->getMethods() as $method) {
+            if ($method->hasAnnotation(Autowired::class)) {
+                /* @var $param \ReflectionParameter */
+                foreach ($method->getParameters() as $param) {
+                    var_dump([
+                        $param->getName(),
+                        $param->canBePassedByValue(),
+                        $param->isArray(),
+                        $param->isCallable(),
+                        $param->isDefaultValueAvailable(),
+                        $param->isOptional(),
+                        $param->isPassedByReference()
+                    ]);
+                }
+            }
+        }
+        die();
+        /* @var $target \PhSpring\ZF2\Engine\ClassGenerator */
+        $target = $event->getTarget();
+        if (! $target->hasMethod(self::TEMPLATE_METHOD)) {
+            $this->copyTemplateMethod($target, self::TEMPLATE_METHOD);
+        }
+        
+        /* @var $property ReflectionProperty */
+        foreach ($reflection->getProperties() as $property) {
+            $this->handleProperty($property);
+        }
+        $target->getMethod(self::CONTRUCTOR_METHOD)->setBody($target->getMethod(self::CONTRUCTOR_METHOD)
+            ->getBody() . PHP_EOL . $this->code);
     }
 }
