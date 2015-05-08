@@ -122,6 +122,7 @@ class AnnotationRouteStack extends TreeRouteStack implements ServiceLocatorAware
                 $classRouteName = $classAnnot->name;
                 $classRoute = $classAnnot->value;
             }
+            $classRoute = $classRoute ? $classRoute : '/'; 
             $routes = [];
             if (preg_match('/\@RequestMapping/', file_get_contents($ref->getFileName()))) {
                 $methods = $ref->getMethods(ReflectionMethod::IS_PUBLIC);
@@ -133,11 +134,11 @@ class AnnotationRouteStack extends TreeRouteStack implements ServiceLocatorAware
                     if ($isIndex || $method->hasAnnotation(RequestMapping::class)) {
                         /* @var $annot RequestMapping */
                         $annot = $method->getAnnotation(RequestMapping::class);
-                        $name = $annot ? $annot->name : ($isIndex && $classRouteName ? $classRouteName : 'phs' . $counter ++);
+                        $name = $annot ? ($annot->name?$annot->name:($isIndex?'index':'phs' . $counter ++)) : ($isIndex && $classRouteName ? $classRouteName : 'phs' . $counter ++);
                         $routes[$name] = [
                             'type' => 'literal',
                             'options' => [
-                                'route' => $classRoute . ($annot ? $annot->value : ''),
+                                'route' => ($classRouteName ? '':$classRoute) . ($annot ? $annot->value : ''),
                                 'defaults' => [
                                     'controller' => $class,
                                     'action' => 'phs-action-method-' . $method->getName()
@@ -147,7 +148,8 @@ class AnnotationRouteStack extends TreeRouteStack implements ServiceLocatorAware
                     }
                 }
                 if ($classAnnot) {
-                    if ($classRouteName) {
+
+                    if ($classRouteName && $classRoute) {
                         $routes = [
                                 'type' => 'literal',
                                 'options' => [
@@ -171,6 +173,7 @@ class AnnotationRouteStack extends TreeRouteStack implements ServiceLocatorAware
                 }
             }
         }
+        //ob_get_clean();echo '<pre>'.print_r($this->fromCache, true);die;
         foreach ($this->fromCache as $key => $route) {
             $this->addRoute($key, $route);
         }

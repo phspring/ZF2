@@ -54,16 +54,16 @@ abstract class AbstractAnnotationListener implements ListenerAggregateInterface
         ), 1000);
     }
 
-    public function onBeforeClass()
+    public function onBeforeClass(Event $event)
     {}
 
-    public function onAfterClass()
+    public function onAfterClass(Event $event)
     {}
 
-    public function onBeforeMethod()
+    public function onBeforeMethod(Event $event)
     {}
 
-    public function onAfterMethod()
+    public function onAfterMethod(Event $event)
     {}    
     
     protected function copyTemplateMethod(ClassGenerator $target, $method){

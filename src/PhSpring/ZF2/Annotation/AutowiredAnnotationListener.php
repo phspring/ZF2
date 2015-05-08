@@ -89,12 +89,14 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
 
     public function onBeforeMethod(Event $event)
     {
+        return;
         $this->code = '';
         $reflection = $this->getReflection($event);
         foreach ($reflection->getMethods() as $method) {
             if ($method->hasAnnotation(Autowired::class)) {
                 /* @var $param \ReflectionParameter */
                 foreach ($method->getParameters() as $param) {
+                    /*
                     var_dump([
                         $param->getName(),
                         $param->canBePassedByValue(),
@@ -103,7 +105,7 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
                         $param->isDefaultValueAvailable(),
                         $param->isOptional(),
                         $param->isPassedByReference()
-                    ]);
+                    ]);*/
                 }
             }
         }
