@@ -9,6 +9,10 @@ class ServiceManager extends Zend_ServiceManager
 
     private $autoAddInvokableClass = true;
 
+    public function canonicalName($name){
+        return strtolower(strtr($name, $this->canonicalNamesReplacements));
+    }
+    
     /**
      * Attempt to create an instance via an invokable class
      *

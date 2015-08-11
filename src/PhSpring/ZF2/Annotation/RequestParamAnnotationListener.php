@@ -12,49 +12,31 @@ use Zend\Mvc\Controller\Plugin\Params;
 class RequestParamAnnotationListener extends AbstractAnnotationListener
 {
 
-    private $code;
-
-    private $refName;
-
-    /**
-     *
-     * @var MethodGenerator
-     */
-    private $targetMethod;
-
     public function onBeforeMethod(Event $event)
     {
-        $this->code = '';
-        $reflection = $this->getReflection($event);
-        /* @var $target \PhSpring\ZF2\Engine\ClassGenerator */
-        $target = $event->getTarget();
-        
-        foreach ($reflection->getMethods() as $method) {
-            $this->targetMethod = $target->getMethod($method->getName());
-            if ($method->hasAnnotation(RequestParam::class)) {
-                if (! $target->hasMethod('phsGetRequestParam')) {
-                    $target->addMethodFromGenerator(MethodGenerator::fromReflection(new MethodReflection(self::class . '::phsGetRequestParam')));
-                }
-                $this->handleMethod($method);
+        if ($this->getReflectionMethod()->hasAnnotation(RequestParam::class)) {
+            if (! $this->getTarget()->hasMethod('phsGetRequestParam')) {
+                $this->getTarget()->addMethodFromGenerator(MethodGenerator::fromReflection(new MethodReflection(self::class . '::phsGetRequestParam')));
             }
+            $this->handleMethod();
         }
     }
 
     /**
      * Handle only one method
      *
-     * @param ReflectionMethod $method            
+     * @param ReflectionMethod $this->getReflectionMethod()            
      */
-    private function handleMethod(ReflectionMethod $method)
+    private function handleMethod()
     {
-        $target = $this->targetMethod->getBody();
+        $target = $this->getTargetMethod()->getBody();
         $preBody = "";
         $params = [];
-        foreach ($method->getParameters() as $param) {
+        foreach ($this->getReflectionMethod()->getParameters() as $param) {
             $params[$param->getName()] = $param;
         }
         
-        foreach ($method->getAnnotations() as $annotation) {
+        foreach ($this->getReflectionMethod()->getAnnotations() as $annotation) {
             if ($annotation instanceof RequestParam) {
                 if (array_key_exists($annotation->value, $params)) {
                     $preBody .= sprintf('$%1$s=$this->phsGetRequestParam("%1$s",%2$b, "%3$s");' . PHP_EOL, $annotation->value, $annotation->required, $annotation->defaultValue);
@@ -62,7 +44,7 @@ class RequestParamAnnotationListener extends AbstractAnnotationListener
             }
         }
         $preBody .= $target;
-        $this->targetMethod->setBody($preBody);
+        $this->getTargetMethod()->setBody($preBody);
     }
 
     private function phsGetRequestParam($name, $required, $default)

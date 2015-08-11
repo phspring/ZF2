@@ -25,24 +25,17 @@ use Zend\EventManager\Event;
 class ConfigAnnotationListener extends AbstractAnnotationListener
 {
 
-    private $code;
-
-    private $refName;
 
     public function onBeforeClass(Event $event)
     {
-        $this->code = '';
-        $reflection = $this->getReflection($event);
-        /* @var $target ClassGenerator */
-        $target = $event->getTarget();
-        if (! $target->hasMethod('phsConfig')) {
-            $target->addMethodFromGenerator(MethodGenerator::fromReflection(new MethodReflection(self::class . '::phsConfig')));
+        if (! $this->getTarget()->hasMethod('phsConfig')) {
+            $this->getTarget()->addMethodFromGenerator(MethodGenerator::fromReflection(new MethodReflection(self::class . '::phsConfig')));
         }
         /* @var $property ReflectionProperty */
-        foreach ($reflection->getProperties() as $property) {
+        foreach ($this->getReflection()->getProperties() as $property) {
             $this->handleProperty($property);
         }
-        $target->getMethod('__construct')->setBody($target->getMethod('__construct')
+        $this->getTarget()->getMethod('__construct')->setBody($this->getTarget()->getMethod('__construct')
             ->getBody() . PHP_EOL . $this->code);
     }
 
