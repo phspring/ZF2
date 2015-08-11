@@ -22,33 +22,31 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
      */
     public function onBeforeClass(Event $event)
     {
-        $reflection = $this->getReflection($event);
-        $target = $event->getTarget();
-        if (! $reflection->hasAnnotation(Controller::class)) {
+        if (! $this->getReflection()->hasAnnotation(Controller::class)) {
             return;
         }
-        $interfaces = $target->getImplementedInterfaces();
+        $interfaces = $this->getTarget()->getImplementedInterfaces();
         $interfaces[] = '\\' . GeneratedControllerInterface::class;
-        $target->setImplementedInterfaces($interfaces);
-        $this->buildConstructor($target, $reflection);
-        $this->cloneMethods($target, $reflection);
-        $target->setName(ClassGenerator::DEFAULT_PREFIX . $target->getName());
-        $extClass = explode('\\', $reflection->getName());
+        $this->getTarget()->setImplementedInterfaces($interfaces);
+        $this->buildConstructor();
+        $this->cloneMethods($this->getTarget(), $this->getReflection());
+        $this->getTarget()->setName(ClassGenerator::DEFAULT_PREFIX . $this->getTarget()->getName());
+        $extClass = explode('\\', $this->getReflection()->getName());
         $oringinClass = end($extClass);
         
-        $annotation = $reflection->getAnnotation(Controller::class);
+        $annotation = $this->getReflection()->getAnnotation(Controller::class);
         if ($annotation instanceof CliController) {
-            $target->setExtendedClass('\\' . AbstractConsoleController::class);
+            $this->getTarget()->setExtendedClass('\\' . AbstractConsoleController::class);
         } else {
-            $target->setExtendedClass('\\' . AbstractActionController::class);
+            $this->getTarget()->setExtendedClass('\\' . AbstractActionController::class);
         }
     }
 
-    private function buildConstructor(ClassGenerator $generator, ReflectionClass $reflection)
+    private function buildConstructor()
     {
         $newMethod = new MethodGenerator();
         $newMethod->setName('__construct');
-        $method = $generator->getMethod('__construct');
+        $method = $this->getTarget()->getMethod('__construct');
         $body = '';
         $params = [];
         if ($method) {
@@ -58,33 +56,32 @@ class ControllerAnnotationListener extends AbstractAnnotationListener
                 $params[] = '$' . $paramName;
             }
             ;
-            $generator->removeMethod($method->getName());
+            $this->getTarget()->removeMethod($method->getName());
         }
         $body .= sprintf('
         $this->serviceLocator = $params[0];
         $this->%1$s = new \%2$s(%3$s);
-        $this->phsRef = new \PhSpring\Reflection\ReflectionClass($this->%1$s);' . PHP_EOL, ClassGenerator::PROPERTY_NAME_INSTANCE, $reflection->getName(), implode(', ', $params));
+        $this->phsRef = new \PhSpring\Reflection\ReflectionClass($this->%1$s);' . PHP_EOL, ClassGenerator::PROPERTY_NAME_INSTANCE, $this->getReflection()->getName(), implode(', ', $params));
         $newMethod->setParameter((new ParameterGenerator())->setName('params'));
         $newMethod->setBody($body);
-        $generator->addMethodFromGenerator($newMethod);
+        $this->getTarget()->addMethodFromGenerator($newMethod);
     }
 
-    private function cloneMethods(ClassGenerator $generator, ReflectionClass $reflection)
+    private function cloneMethods()
     {
-        foreach ($generator->getMethods() as $method) {
+        foreach ($this->getTarget()->getMethods() as $method) {
             if ($method->getName() == '__construct') {
                 continue;
             }
             $newMethod = $this->cloneMethod($method);
-            $generator->removeMethod($method->getName());
-            $generator->addMethodFromGenerator($newMethod);
+            $this->getTarget()->removeMethod($method->getName());
+            $this->getTarget()->addMethodFromGenerator($newMethod);
         }
     }
 
     /**
      *
-     * @param ClassGenerator $generator            
-     * @param ReflectionClass $reflection            
+     * @param MethodGenerator $method                      
      * @return string|\Zend\Code\Generator\MethodGenerator
      */
     private function cloneMethod(MethodGenerator $method)

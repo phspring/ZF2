@@ -27,7 +27,7 @@ class ControllerManager extends ZCM
      * @return null|stdClass
      * @throws ServiceNotCreatedException If resolved class does not exist
      */
-    protected function createFromInvokable($canonicalName, $requestedName)
+    protected function _createFromInvokable($canonicalName, $requestedName)
     {
         $invokable = $this->invokableClasses[$canonicalName];
         $originInvokable = $invokable;
@@ -36,34 +36,35 @@ class ControllerManager extends ZCM
             throw new ServiceNotFoundException(sprintf('%s: failed retrieving "%s%s" via invokable class "%s"; class does not exist', get_class($this) . '::' . __FUNCTION__, $canonicalName, ($requestedName ? '(alias: ' . $requestedName . ')' : ''), $invokable));
         }
 
-        $ref = new ReflectionClass($invokable);
+        //$ref = new ReflectionClass($invokable);
         /* @var $cache \Zend\Cache\Storage\Adapter\Filesystem */
         $cache = $this->getServiceLocator()->get('phsCache');
+        var_dump(__METHOD__);die;
         
         
-        if (1 == 1 || ! $cache->hasItem($canonicalName)) {
-            $cache->addItem($canonicalName, $invokable);
-            if (! $invokable instanceof AbstractActionController) {
-                if ($ref->hasAnnotation(Controller::class)) {
-                    $parts = str_split(md5($ref->getFileName()), 2);
-                    array_unshift($parts, $cache->getOptions()->getCacheDir());
-                    $path = implode(DIRECTORY_SEPARATOR, $parts);
-                    if(!file_exists($path)){
-                        mkdir($path, 0755, true);
-                    }
-                    $generator = $this->getServiceLocator()->get('ControllerGenerator');
-                    $class = $generator($invokable);
-                    $classPath = $path.DIRECTORY_SEPARATOR.pathinfo($ref->getFileName(), PATHINFO_BASENAME);
-                    file_put_contents($classPath, '<?php'.PHP_EOL.$class->generate());
+//         if (1 == 1 || ! $cache->hasItem($canonicalName)) {
+//             $cache->addItem($canonicalName, $invokable);
+//             if (! $invokable instanceof AbstractActionController) {
+//                 if ($ref->hasAnnotation(Controller::class)) {
+//                     $parts = str_split(md5($ref->getFileName()), 2);
+//                     array_unshift($parts, $cache->getOptions()->getCacheDir());
+//                     $path = implode(DIRECTORY_SEPARATOR, $parts);
+//                     if(!file_exists($path)){
+//                         mkdir($path, 0755, true);
+//                     }
+//                     $generator = $this->getServiceLocator()->get('ControllerGenerator');
+//                     $class = $generator($invokable);
+//                     $classPath = $path.DIRECTORY_SEPARATOR.pathinfo($ref->getFileName(), PATHINFO_BASENAME);
+//                     file_put_contents($classPath, '<?php'.PHP_EOL.$class->generate());
                     
-                    $cache->setItem($canonicalName, [
-                        'name' => $class->getInvokableClassName(),
-                        'class_path'=>$classPath,
-                        'template' => preg_replace('/\\\\/', '/', preg_replace('/(\\\\)?Controller/', '', $invokable))
-                    ]);
-                }
-            }
-        }
+//                     $cache->setItem($canonicalName, [
+//                         'name' => $class->getInvokableClassName(),
+//                         'class_path'=>$classPath,
+//                         'template' => preg_replace('/\\\\/', '/', preg_replace('/(\\\\)?Controller/', '', $invokable))
+//                     ]);
+//                 }
+//             }
+//         }
 
         $data = $cache->getItem($canonicalName);
         if (is_array($data)) {

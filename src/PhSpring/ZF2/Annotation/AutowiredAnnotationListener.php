@@ -21,10 +21,6 @@ use Zend\Code\Reflection\MethodReflection;
 class AutowiredAnnotationListener extends AbstractAnnotationListener
 {
 
-    private $code;
-
-    private $refName;
-
     const TEMPLATE_METHOD = 'phsAutowired';
 
     const CONTRUCTOR_METHOD = '__construct';
@@ -89,6 +85,7 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
 
     public function onBeforeMethod(Event $event)
     {
+        return;
         $this->code = '';
         $reflection = $this->getReflection($event);
         foreach ($reflection->getMethods() as $method) {
@@ -102,7 +99,8 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
                         $param->isCallable(),
                         $param->isDefaultValueAvailable(),
                         $param->isOptional(),
-                        $param->isPassedByReference()
+                        $param->isPassedByReference(),
+                        $param->getClass()
                     ]);
                 }
             }
