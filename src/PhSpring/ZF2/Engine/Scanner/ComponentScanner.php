@@ -24,6 +24,12 @@ class ComponentScanner implements AbstractFactoryInterface
 
     protected $config;
 
+    /**
+     *
+     * @var \Zend\Cache\Storage\Adapter\Filesystem
+     */
+    private $cache;
+
     public function canCreateServiceWithName(ServiceLocatorInterface $serviceLocator, $name, $requestedName)
     {
         return in_array($requestedName, [
@@ -34,6 +40,7 @@ class ComponentScanner implements AbstractFactoryInterface
 
     public function createServiceWithName(ServiceLocatorInterface $serviceLocator, $name, $requestedName)
     {
+        $this->cache = $serviceLocator->get('phsCache');
         $iterator = new \AppendIterator();
         $componentDirs = [];
         $componentNamespaces = $this->getConfig($serviceLocator);
@@ -45,15 +52,32 @@ class ComponentScanner implements AbstractFactoryInterface
             $pattern .= implode('|', $componentNamespaces);
             $pattern .= ')/';
             $fname = '*.php';
-            foreach ($this->findAllDirs(getcwd(), $pattern) as $dir) {
+            $cacheKey =md5(getcwd().$pattern);
+            if(!$this->cache->hasItem($cacheKey)){
+                $data = [];
+            }
+            foreach ($this->findAllDirs(getcwd(), $pattern, $cacheKey) as $dir) {
+                $data[]=$dir;
                 $iterator->append(new \RecursiveDirectoryIterator($dir, FilesystemIterator::KEY_AS_PATHNAME | FilesystemIterator::CURRENT_AS_FILEINFO | FilesystemIterator::SKIP_DOTS));
             }
+            if(!$this->cache->hasItem($cacheKey)){
+                $this->cache->addItem($cacheKey, $data);
+            }
+            
         }
         return new Scanner($iterator, $serviceLocator);
     }
 
-    protected function findAllDirs($start, $pattern)
+    protected function findAllDirs($start, $pattern, $cacheKey)
     {
+        if(!$this->cache->hasItem($cacheKey)){
+            return $this->findAllDirsGenerator($start, $pattern);
+        }else {
+            return  $this->cache->getItem($cacheKey);
+        }
+    }
+    
+    protected function findAllDirsGenerator($start, $pattern){
         $dirStack = [
             $start
         ];
@@ -61,10 +85,11 @@ class ComponentScanner implements AbstractFactoryInterface
             $ar = glob($dir . '/*', GLOB_ONLYDIR | GLOB_NOSORT);
             if (! $ar)
                 continue;
-            
+        
             $dirStack = array_merge($dirStack, $ar);
             foreach ($ar as $DIR) {
                 if (preg_match($pattern, $DIR)) {
+        
                     yield $DIR;
                 }
             }
