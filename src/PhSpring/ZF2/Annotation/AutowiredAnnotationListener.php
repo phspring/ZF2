@@ -92,6 +92,7 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
             if ($method->hasAnnotation(Autowired::class)) {
                 /* @var $param \ReflectionParameter */
                 foreach ($method->getParameters() as $param) {
+                    /*
                     var_dump([
                         $param->getName(),
                         $param->canBePassedByValue(),
@@ -100,8 +101,7 @@ class AutowiredAnnotationListener extends AbstractAnnotationListener
                         $param->isDefaultValueAvailable(),
                         $param->isOptional(),
                         $param->isPassedByReference(),
-                        $param->getClass()
-                    ]);
+                    ]);*/
                 }
             }
         }
